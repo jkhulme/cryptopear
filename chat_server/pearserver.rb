@@ -18,7 +18,6 @@ class PearServer
 
       # State is handled via the user model
       client = PearClient.new(client_socket).commit
-      announce "-> #{client.name} has joined the chat.".yellow
 
       # First transmission is authentication
       handshake = client.listen
