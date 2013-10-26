@@ -4,6 +4,7 @@ import sys
 from PySide.QtGui import *
 from PySide.QtCore import *
 import os
+import voting
 import socket as sok
 from time import *
 try:
