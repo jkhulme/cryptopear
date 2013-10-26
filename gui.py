@@ -119,6 +119,7 @@ class CryptoPear(QWidget):
 
     def append_messages(self, messages):
         if messages:
+            self.chatbox.setTextColor('red')
             self.chatbox.setReadOnly(False)
             self.chatbox.clear()
             self.chatbox.append(messages)
