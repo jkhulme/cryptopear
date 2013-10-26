@@ -6,6 +6,8 @@ from PySide.QtCore import *
 import os
 import socket as sok
 from time import *
+from SimpleCV import Camera
+import json
 
 _main_path = "test_images/"
 LOCALHOST, PORT, BUFFER_S = '127.0.0.1', 8008, 1024
@@ -71,7 +73,15 @@ class CryptoPear(QWidget):
         self.setWindowTitle('CryptoPear')
         self.show()
 
+    def get_camera(self):
+        cam = Camera()
+        img = cam.getImage()
+        img.save("mZOMGGUYS.png")
+        return voting.encode_image("mZOMGGUYS.png")
+
     def connect_to_server(self):
+        self.get_camera()
+
         self.server_handler = ServerHandler()
         self.btn_accept.setDisabled(False)
         self.btn_reject.setDisabled(False)
