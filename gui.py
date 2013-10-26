@@ -169,10 +169,9 @@ class MessageThread(QThread):
         while True:
             new_messages = None
             try:
-                print "hello?"
                 new_messages = self.server_handler.receive_messages()
             except:
-                print "shit is fucked"
+                pass
             self.message.emit(new_messages)
             sleep(1)
 
@@ -192,7 +191,6 @@ class ServerHandler(object):
         self.pub, self.pri = rsa.newkeys(2048, poolsize=4)
         self.server.send(base64.b64encode(self.pub._save_pkcs1_pem()) + "\n")
         data = self.server.recv(BUFFER_S)
-        print data
         self.server_pub = base64.b64decode(data)
 
     def __decrypt__(self, data):
