@@ -31,14 +31,14 @@ def handle_parsed_json(parsed):
   if parsed['type'] == 'quitjoin':
     name = parsed['quitjoin']['name']
     if parsed['quitjoin']['event'] == 'join':
-      return colored(parsed['time'] + ' -> ' + name + ' has joined the channel.\n', 'yellow')
+      return colored(''.join([parsed['time'],' -> ',name,' has joined the channel.\n']), 'yellow')
     else:
-      return colored(parsed['time'] + ' <- ' + name + ' has left the channel.\n', 'red')
+      return colored(''.join([parsed['time'],' <- ',name,' has left the channel.\n']), 'red')
   elif parsed['type'] == 'message':
     sender = parsed['message']['sender']
-    return colored('<' + sender + '> ', 'green') + parsed['message']['body']
+    return colored(''.join(['<',sender,'> ']),'green') + parsed['message']['body']
   elif parsed['type'] == 'event':
-    return colored(parsed['event']['message'] + '\n', 'cyan')
+    return colored(''.join([parsed['event']['message'],'\n']),'cyan')
 
 while True:
   # Check if any user input should be sent
@@ -50,17 +50,16 @@ while True:
   #Check if there there is any received data in the socket buffer
   sock_action = select.select([server], [], [], IO_TIMEOUT_S)[0]
   if sock_action:
-    data = server.recv(BUFFER_S)
-
     try:
       # Parse received json data
+      data = server.recv(BUFFER_S)
       parsed = json.loads(data)
     except ValueError:
       continue
 
     message = handle_parsed_json(parsed)
-
     messages.append(message)
+
     # Replace the screen contents with the updated message buffer
     os.system('clear')
     print "".join(messages[-MESSAGE_LIMIT:])
