@@ -14,7 +14,7 @@ else:
   DESTINATION = LOCALHOST
 
 IO_TIMEOUT_S = 0.1
-MESSAGE_LIMIT = 10
+MESSAGE_LIMIT = 40
 
 server = sok.socket(sok.AF_INET, sok.SOCK_STREAM)
 server.connect((DESTINATION, PORT))
