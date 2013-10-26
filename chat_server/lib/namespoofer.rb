@@ -6,7 +6,7 @@ class NameSpoofer
 
   def random_first_name
     pool= %w{walter jesse james jack wolf terrence
-    tom billy bartholomew hugh stepher lynne lisa alice
+    tom billy bartholomew hugh stephen lynne lisa alice
     william bob mary ryan paul daniel clarence margret}
     pool.sample.capitalize
   end
