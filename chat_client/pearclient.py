@@ -22,6 +22,8 @@ server.setblocking(0)
 
 messages = []
 
+server.send("The magic word\n")
+
 while True:
   # Check if any user input should be sent
   term_action = select.select([sys.stdin], [], [], IO_TIMEOUT_S)[0]
