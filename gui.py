@@ -1,11 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import sys
-from PySide import QtGui
+from PySide.QtGui import *
+from PySide.QtCore import *
 import os
 import socket as sok
-import select
-import string
+from time import *
 
 _main_path = "test_images/"
 LOCALHOST, PORT, BUFFER_S = '127.0.0.1', 8008, 1024
@@ -13,7 +13,7 @@ IO_TIMEOUT_S = 0.1
 MESSAGE_LIMIT = 40
 
 
-class CryptoPear(QtGui.QWidget):
+class CryptoPear(QWidget):
 
     def __init__(self):
         super(CryptoPear, self).__init__()
@@ -29,32 +29,32 @@ class CryptoPear(QtGui.QWidget):
         self.server_handler = ServerHandler()
         self.paths = self.list_files()
 
-        pixmap = QtGui.QPixmap(self.paths.pop(0)).scaledToHeight(200)
-        self.lbl = QtGui.QLabel(self)
+        pixmap = QPixmap(self.paths.pop(0)).scaledToHeight(200)
+        self.lbl = QLabel(self)
         self.lbl.setPixmap(pixmap)
 
-        btn_accept = QtGui.QPushButton("Accept")
-        btn_reject = QtGui.QPushButton("Reject")
+        btn_accept = QPushButton("Accept")
+        btn_reject = QPushButton("Reject")
         btn_accept.clicked.connect(self.accept_participent)
         btn_reject.clicked.connect(self.reject_participent)
 
-        hbox = QtGui.QHBoxLayout()
+        hbox = QHBoxLayout()
         hbox.addStretch(1)
         hbox.addWidget(btn_accept)
         hbox.addWidget(btn_reject)
 
-        self.chatbox = QtGui.QTextEdit(self)
+        self.chatbox = QTextEdit(self)
         self.chatbox.setMinimumHeight(400)
         self.chatbox.setReadOnly(True)
 
-        self.text_entry = QtGui.QTextEdit(self)
-        btn_submit = QtGui.QPushButton("Submit")
+        self.text_entry = QTextEdit(self)
+        btn_submit = QPushButton("Submit")
         btn_submit.clicked.connect(self.submit_message)
-        text_hbox = QtGui.QHBoxLayout()
+        text_hbox = QHBoxLayout()
         text_hbox.addWidget(self.text_entry)
         text_hbox.addWidget(btn_submit)
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addStretch(1)
         vbox.addWidget(self.lbl)
         vbox.addLayout(hbox)
@@ -67,27 +67,46 @@ class CryptoPear(QtGui.QWidget):
         self.setWindowTitle('CryptoPear')
         self.show()
 
+        self.thread = MessageThread(self.chatbox, self.server_handler)
+        self.thread.started.connect(self.started)
+        self.thread.finished.connect(self.finished)
+        self.thread.terminated.connect(self.terminated)
+        self.handletoggle()
+
+    def handletoggle(self):
+        if self.thread.isRunning():
+            self.thread.exiting=True
+            while self.thread.isRunning():
+                sleep(0.5)
+                continue
+        else:
+            self.thread.exiting=False
+            self.thread.start()
+            while not self.thread.isRunning():
+                sleep(0.5)
+                continue
+
+    def started(self):
+        print('Continuous batch started')
+
+    def finished(self):
+        print('Continuous batch stopped')
+
+    def terminated(self):
+        print('Continuous batch terminated')
+
     def submit_message(self):
         self.server_handler.send_message(self.text_entry.toPlainText())
         self.text_entry.clear()
-        self.receive_messages()
-
-    def receive_messages(self):
-        self.chatbox.setReadOnly(False)
-        new_messages = self.server_handler.receive_messages()
-        print new_messages
-        self.chatbox.clear()
-        self.chatbox.append(new_messages)
-        self.chatbox.setReadOnly(True)
 
     def set_picture(self, file_path):
-        image = QtGui.QImage(file_path)
+        image = QImage(file_path)
         if image.isNull():
-            QtGui.QMessageBox.information(self, "Image Viewer",
+            QMessageBox.information(self, "Image Viewer",
                     "Cannot load file")
             return
 
-        self.lbl.setPixmap(QtGui.QPixmap.fromImage(image).scaledToHeight(200))
+        self.lbl.setPixmap(QPixmap.fromImage(image).scaledToHeight(200))
         self.lbl.adjustSize()
 
     def accept_participent(self):
@@ -95,6 +114,29 @@ class CryptoPear(QtGui.QWidget):
 
     def reject_participent(self):
         print "participant rejected"
+
+class MessageThread(QThread):
+
+    def __init__(self, chatbox, server_handler):
+        super(MessageThread, self).__init__()
+        self.chatbox = chatbox
+        self.server_handler = server_handler
+
+    def run(self):
+        """
+        self.chatbox.setReadOnly(False)
+        self.chatbox.clear()
+        self.chatbox.append(new_messages)
+        self.chatbox.setReadOnly(True)
+        """
+        self.exec_()
+
+    def exec_(self):
+        while True:
+            print "foobar"
+            new_messages = self.server_handler.receive_messages()
+            print new_messages
+            #sleep(5)
 
 class ServerHandler(object):
 
@@ -112,7 +154,6 @@ class ServerHandler(object):
         self.messages = []
 
     def send_message(self, outgoing_message):
-        print outgoing_message
         self.server.send(outgoing_message+'\n')
 
     def receive_messages(self):
@@ -121,8 +162,7 @@ class ServerHandler(object):
         return "".join(self.messages[-MESSAGE_LIMIT:])
 
 def main():
-
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     cp = CryptoPear()
     sys.exit(app.exec_())
 
