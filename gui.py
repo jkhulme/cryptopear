@@ -49,15 +49,26 @@ class Example(QtGui.QWidget):
         hbox.addWidget(btn_accept)
         hbox.addWidget(btn_reject)
 
+        chatbox = QtGui.QTextEdit(self)
+        chatbox.setMinimumHeight(400)
+        chatbox.setReadOnly(True)
+
+        text_entry = QtGui.QTextEdit(self)
+        btn_submit = QtGui.QPushButton("Submit")
+        text_hbox = QtGui.QHBoxLayout()
+        text_hbox.addWidget(text_entry)
+        text_hbox.addWidget(btn_submit)
+
         vbox = QtGui.QVBoxLayout()
         vbox.addStretch(1)
         vbox.addWidget(self.lbl)
         vbox.addLayout(hbox)
-
+        vbox.addWidget(chatbox)
+        vbox.addLayout(text_hbox)
         self.setLayout(vbox)
 
         #starting x, starting y, width, height
-        self.setGeometry(0, 0, 500, 300)
+        self.setGeometry(0, 0, 500, 700)
         self.setWindowTitle('CryptoPear')
         self.show()
 
