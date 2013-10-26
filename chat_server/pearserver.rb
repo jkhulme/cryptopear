@@ -37,7 +37,7 @@ class PearServer
             announce message_from client.name, data
           else
             announce quitjoin_event :quit, client.name
-            return
+            break
           end
         end
       rescue Exception => ex
