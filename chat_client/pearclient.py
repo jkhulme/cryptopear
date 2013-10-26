@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 #198.211.120.146
 
-from termcolor import colored
 import socket as sok
 import select
 import string
@@ -10,6 +9,8 @@ import os
 import json
 import rsa
 import base64
+
+from event_printer import handle_event_json
 
 LOCALHOST, PORT, BUFFER_S = '127.0.0.1', 8008, 1024
 
@@ -37,19 +38,6 @@ class PearClient:
     return self
 
   def loop(self):
-    def handle_parsed_json(parsed):
-      if parsed['type'] == 'quitjoin':
-        name = parsed['quitjoin']['name']
-        if parsed['quitjoin']['event'] == 'join':
-          return colored(''.join([parsed['time'],' -> ',name,' has joined the channel.\n']), 'yellow')
-        else:
-          return colored(''.join([parsed['time'],' <- ',name,' has left the channel.\n']), 'red')
-      elif parsed['type'] == 'message':
-        sender = parsed['message']['sender']
-        return colored(''.join(['<',sender,'> ']),'green') + parsed['message']['body']
-      elif parsed['type'] == 'event':
-        return colored(''.join([parsed['event']['message'],'\n']),'cyan')
-
     while True:
       # Check if any user input should be sent
       term_action = select.select([sys.stdin], [], [], IO_TIMEOUT_S)[0]
@@ -68,7 +56,7 @@ class PearClient:
         except ValueError:
           continue
 
-        message = handle_parsed_json(parsed)
+        message = handle_event_json(parsed)
         self.messages.append(message)
 
         # Replace the screen contents with the updated message buffer
