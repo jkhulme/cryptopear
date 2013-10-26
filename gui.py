@@ -17,6 +17,8 @@ import sys
 from PySide import QtGui
 from os import listdir
 
+_main_path = "test_images/"
+
 class Example(QtGui.QWidget):
 
     def __init__(self):
@@ -24,17 +26,18 @@ class Example(QtGui.QWidget):
 
         self.initUI()
 
-    def set_image(self, path):
-        pixmap = QtGui.QPixmap(path).scaledToHeight(200)
-        self.lbl = QtGui.QLabel(self)
-        self.lbl.setPixmap(pixmap)
-
-    def cycle_images(self, img_dir):
-        print listdir(img_dir)
+    def list_files(self):
+        path = '/Users/james/projects/cryptopear/test_images/'
+        files = listdir(path)
+        return map(lambda f: path + f, files)
 
     def initUI(self):
-        self.cycle_images("test_images/")
-        self.set_image("test_images/default_image.png")
+
+        self.paths = self.list_files()
+
+        pixmap = QtGui.QPixmap(self.paths.pop(0)).scaledToHeight(200)
+        self.lbl = QtGui.QLabel(self)
+        self.lbl.setPixmap(pixmap)
 
         btn_accept = QtGui.QPushButton("Accept")
         btn_reject = QtGui.QPushButton("Reject")
@@ -53,12 +56,23 @@ class Example(QtGui.QWidget):
 
         self.setLayout(vbox)
 
-        #self.setGeometry(300, 300, 300, 150)
+        #starting x, starting y, width, height
+        self.setGeometry(0, 0, 500, 300)
         self.setWindowTitle('CryptoPear')
         self.show()
 
+    def set_picture(self, file_path):
+        image = QtGui.QImage(file_path)
+        if image.isNull():
+            QtGui.QMessageBox.information(self, "Image Viewer",
+                    "Cannot load file")
+            return
+
+        self.lbl.setPixmap(QtGui.QPixmap.fromImage(image).scaledToHeight(200))
+        self.lbl.adjustSize()
+
     def accept_participent(self):
-        print "participant accepted"
+        self.set_picture(self.paths.pop(0))
 
     def reject_participent(self):
         print "participant rejected"
