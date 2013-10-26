@@ -68,7 +68,15 @@ class CryptoPear(QWidget):
         self.show()
 
         self.thread = MessageThread(self.chatbox, self.server_handler)
+        self.thread.message.connect(self.append_messages, Qt.QueuedConnection)
         self.handletoggle()
+
+    def append_messages(self, messages):
+        if messages:
+            self.chatbox.setReadOnly(False)
+            self.chatbox.clear()
+            self.chatbox.append(messages)
+            self.chatbox.setReadOnly(True)
 
     def handletoggle(self):
         if self.thread.isRunning():
@@ -99,6 +107,8 @@ class CryptoPear(QWidget):
 
 class MessageThread(QThread):
 
+    message = Signal(str)
+
     def __init__(self, chatbox, server_handler):
         super(MessageThread, self).__init__()
         self.chatbox = chatbox
@@ -106,20 +116,13 @@ class MessageThread(QThread):
 
     def run(self):
         while True:
-            print "foobar"
             new_messages = None
             try:
                 new_messages = self.server_handler.receive_messages()
             except:
                 pass
-            print new_messages
+            self.message.emit(new_messages)
             sleep(1)
-        """
-        self.chatbox.setReadOnly(False)
-        self.chatbox.clear()
-        self.chatbox.append(new_messages)
-        self.chatbox.setReadOnly(True)
-        """
 
 class ServerHandler(object):
 
