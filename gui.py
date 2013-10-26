@@ -12,6 +12,8 @@ try:
 except:
     print "no simple cv"
 import json
+import rsa
+import base64
 
 _main_path = "test_images/"
 LOCALHOST, PORT, BUFFER_S = '127.0.0.1', 8008, 1024
@@ -89,7 +91,6 @@ class CryptoPear(QWidget):
     def get_user(self):
         text, ok = QInputDialog.getText(self, 'Input Dialog',
             'Enter your name:')
-
         if ok:
             return text
         else:
@@ -116,6 +117,7 @@ class CryptoPear(QWidget):
         self.handletoggle()
 
     def append_messages(self, messages):
+        self.pretty_json(messages)
         if messages:
             self.chatbox.setReadOnly(False)
             self.chatbox.clear()
@@ -151,6 +153,9 @@ class CryptoPear(QWidget):
     def reject_participent(self):
         print "participant rejected"
 
+    def pretty_json(self, msg_json):
+        return msg_json
+
 class MessageThread(QThread):
 
     message = Signal(str)
@@ -164,9 +169,10 @@ class MessageThread(QThread):
         while True:
             new_messages = None
             try:
+                print "hello?"
                 new_messages = self.server_handler.receive_messages()
             except:
-                pass
+                print "shit is fucked"
             self.message.emit(new_messages)
             sleep(1)
 
@@ -185,13 +191,40 @@ class ServerHandler(object):
         self.server.send("The magic word\n")
         self.messages = []
 
+        self.pub, self.pri = rsa.newkeys(2048, poolsize=4)
+
+    def ident(self):
+        self.server.send(base64.b64encode(self.pub._save_pkcs1_pem()) + "\n")
+        return self
+
     def send_message(self, outgoing_message):
         self.server.send(outgoing_message+'\n')
 
     def receive_messages(self):
-        data = self.server.recv(BUFFER_S)
-        self.messages.append(data)
-        return "".join(self.messages[-MESSAGE_LIMIT:])
+        try:
+            # Parse received json data
+            data = self.server.recv(BUFFER_S)
+            decrypted = rsa.decrypt(base64.b64decode(data), self.pri)
+            parsed = json.loads(decrypted)
+        except ValueError:
+            print "Value Error"
+
+        message = self.handle_parsed_json(parsed)
+        self.messages.append(message)
+        print "".join(self.messages[-MESSAGE_LIMIT:])
+
+    def handle_parsed_json(self, parsed):
+      if parsed['type'] == 'quitjoin':
+        name = parsed['quitjoin']['name']
+        if parsed['quitjoin']['event'] == 'join':
+          return colored(''.join([parsed['time'],' -> ',name,' has joined the channel.\n']), 'yellow')
+        else:
+          return colored(''.join([parsed['time'],' <- ',name,' has left the channel.\n']), 'red')
+      elif parsed['type'] == 'message':
+        sender = parsed['message']['sender']
+        return colored(''.join(['<',sender,'> ']),'green') + parsed['message']['body']
+      elif parsed['type'] == 'event':
+        return colored(''.join([parsed['event']['message'],'\n']),'cyan')
 
 def main():
     app = QApplication(sys.argv)
