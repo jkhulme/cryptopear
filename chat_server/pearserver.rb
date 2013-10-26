@@ -2,19 +2,14 @@
 
 require 'socket'
 require 'thread'
-require 'colored'
+require 'json'
 
 require_relative './lib/client'
 
-
 class PearServer
+
   def initialize
     @server_socket = TCPServer.new 8008
-  end
-
-  def announce(line)
-    puts line
-    PearClient.all.each { |c| c.speak line }
   end
 
   def work
@@ -23,26 +18,66 @@ class PearServer
 
       # State is handled via the user model
       client = PearClient.new(client_socket).commit
-      announce "-> #{client.name} has joined the chat.".yellow
 
       # First transmission is authentication
       handshake = client.listen
       return unless handshake == "The magic word\n"
-      announce "-> #{client.name} has joined the chat.".yellow
+      announce quitjoin_event :join, client.name
 
       # Relay any received data to the other clients
       loop do
-        data = client.listen
-
-        if data.nil?
-          announce "<- #{client.name} has left the chat.".red
+        if !(data = client.listen).nil?
+          announce message_from client.name, data
+        else
+          announce quitjoin_event :quit, client.name
           return
         end
-
-        announce "<#{client.name}(#{client.id})>".green << " #{data}"
       end
 
     } }
+  end
+
+  private
+
+  def the_time
+    Time.now.strftime '%H:%M'
+  end
+
+  def announce(line)
+    puts line
+    PearClient.all.each { |c| c.speak line.to_json }
+  end
+
+  def server_event(message)
+    {
+      time: the_time,
+      type: 'event',
+      event: {
+        message: message
+      }
+    }
+  end
+
+  def quitjoin_event(type, name)
+    {
+      time: the_time,
+      type: 'quitjoin',
+      quitjoin: {
+        event: type.to_s,
+        name: name
+      }
+    }
+  end
+
+  def message_from(name, message)
+    {
+      time: the_time,
+      type: 'message',
+      message: {
+        sender: name,
+        body: message
+      }
+    }
   end
 
 end
