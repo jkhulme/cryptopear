@@ -16,12 +16,8 @@ class PearServer
     # Spawn a new worker thread for each client socket opened
     loop { Thread.start(@server_socket.accept) { |client_socket|
 
-      # State is handled via the user model
+      # State is handled via the user model, first transmission is pubkey
       client = PearClient.new(client_socket).commit
-
-      # First transmission is authentication
-      handshake = client.listen
-      return unless handshake == "The magic word\n"
       announce quitjoin_event :join, client.name
 
       # Relay any received data to the other clients
@@ -45,7 +41,7 @@ class PearServer
 
   def announce(line)
     puts line
-    PearClient.all.each { |c| c.speak line.to_json }
+    PearClient.all.each { |c| c.speak c.pkey_encrypt(line.to_json) }
   end
 
   def server_event(message)
