@@ -21,7 +21,7 @@ class CryptoPear(QWidget):
         self.initUI()
 
     def list_files(self):
-        path = '/Users/james/projects/cryptopear/test_images/'
+        path = os.getcwd() + '/test_images/'
         files = os.listdir(path)
         return map(lambda f: path + f, files)
 
