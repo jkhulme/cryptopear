@@ -2,6 +2,7 @@
 
 require 'socket'
 require 'thread'
+require 'colored'
 
 require_relative './lib/client'
 
@@ -11,20 +12,25 @@ class PearServer
     @server_socket = TCPServer.new 8008
   end
 
+  def announce(line)
+    puts line
+    PearClient.all.each { |c| c.speak line }
+  end
+
   def work
     loop { Thread.start(@server_socket.accept) { |client_socket|
 
       client = PearClient.new(client_socket).commit
-      puts "# New connection! ID: #{client.id}, Random Name: #{client.name}"
+      announce "-> #{client.name} has joined the chat.".yellow
 
       loop do
         data = client.listen
-        return if data.nil?
+        if data.nil?
+          announce "<- #{client.name} has left the chat.".red
+          return
+        end
 
-        line = "<#{client.name}(#{client.id})> #{data}"
-        puts line
-
-        PearClient.all.each { |c| c.speak line }
+        announce "<#{client.name}(#{client.id})>".green << " #{data}"
       end
 
     } }
