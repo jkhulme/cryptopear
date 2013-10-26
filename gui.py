@@ -14,6 +14,7 @@ except:
 import json
 import rsa
 import base64
+from event_printer import handle_event_json
 
 _main_path = "test_images/"
 LOCALHOST, PORT, BUFFER_S = '127.0.0.1', 8008, 1024
@@ -117,7 +118,6 @@ class CryptoPear(QWidget):
         self.handletoggle()
 
     def append_messages(self, messages):
-        self.pretty_json(messages)
         if messages:
             self.chatbox.setReadOnly(False)
             self.chatbox.clear()
@@ -186,16 +186,17 @@ class ServerHandler(object):
 
         self.server = sok.socket(sok.AF_INET, sok.SOCK_STREAM)
         self.server.connect((DESTINATION, PORT))
-        self.server.setblocking(0)
 
-        self.server.send("The magic word\n")
         self.messages = []
 
         self.pub, self.pri = rsa.newkeys(2048, poolsize=4)
-
-    def ident(self):
         self.server.send(base64.b64encode(self.pub._save_pkcs1_pem()) + "\n")
-        return self
+        data = self.server.recv(BUFFER_S)
+        print data
+        self.server_pub = base64.b64decode(data)
+
+    def __decrypt__(self, data):
+        return rsa.decrypt(base64.b64decode(data), self.pri)
 
     def send_message(self, outgoing_message):
         self.server.send(outgoing_message+'\n')
@@ -204,27 +205,13 @@ class ServerHandler(object):
         try:
             # Parse received json data
             data = self.server.recv(BUFFER_S)
-            decrypted = rsa.decrypt(base64.b64decode(data), self.pri)
-            parsed = json.loads(decrypted)
+            parsed = json.loads(self.__decrypt__(data))
         except ValueError:
             print "Value Error"
 
-        message = self.handle_parsed_json(parsed)
+        message = handle_event_json(parsed)
         self.messages.append(message)
-        print "".join(self.messages[-MESSAGE_LIMIT:])
-
-    def handle_parsed_json(self, parsed):
-      if parsed['type'] == 'quitjoin':
-        name = parsed['quitjoin']['name']
-        if parsed['quitjoin']['event'] == 'join':
-          return colored(''.join([parsed['time'],' -> ',name,' has joined the channel.\n']), 'yellow')
-        else:
-          return colored(''.join([parsed['time'],' <- ',name,' has left the channel.\n']), 'red')
-      elif parsed['type'] == 'message':
-        sender = parsed['message']['sender']
-        return colored(''.join(['<',sender,'> ']),'green') + parsed['message']['body']
-      elif parsed['type'] == 'event':
-        return colored(''.join([parsed['event']['message'],'\n']),'cyan')
+        return "".join(self.messages[-MESSAGE_LIMIT:])
 
 def main():
     app = QApplication(sys.argv)
