@@ -10,9 +10,10 @@ class PearClient
 
   attr_reader :id, :socket, :name
 
-  def initialize(socket)
+  def initialize(socket, encoded_pubkey)
     @socket = socket
     @pubkey = Base64.decode64(socket.gets)
+    @socket.puts encoded_pubkey
     @messages = Queue.new
     @responder = Thread.new do
       while (message = @messages.pop)

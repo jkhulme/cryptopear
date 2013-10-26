@@ -26,15 +26,23 @@ class PearClient:
   def __init__(self):
     server = sok.socket(sok.AF_INET, sok.SOCK_STREAM)
     server.connect((DESTINATION, PORT))
-    server.setblocking(0)
     self.server = server
 
     self.messages = []
 
     self.pub, self.pri = rsa.newkeys(2048, poolsize=4)
 
+  def __decrypt__(self, data):
+    return rsa.decrypt(base64.b64decode(data), self.pri)
+
   def ident(self):
     self.server.send(base64.b64encode(self.pub._save_pkcs1_pem()) + "\n")
+    data = self.server.recv(BUFFER_S)
+    print data
+    self.server_pub = base64.b64decode(data)
+    self.server.setblocking(0)
+    print "getting pub"
+    print self.server_pub
     return self
 
   def loop(self):
@@ -51,8 +59,7 @@ class PearClient:
         try:
           # Parse received json data
           data = self.server.recv(BUFFER_S)
-          decrypted = rsa.decrypt(base64.b64decode(data), self.pri)
-          parsed = json.loads(decrypted)
+          parsed = json.loads(self.__decrypt__(data))
         except ValueError:
           continue
 
