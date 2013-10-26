@@ -43,22 +43,22 @@ class CryptoPear(QtGui.QWidget):
         hbox.addWidget(btn_accept)
         hbox.addWidget(btn_reject)
 
-        chatbox = QtGui.QTextEdit(self)
-        chatbox.setMinimumHeight(400)
-        chatbox.setReadOnly(True)
+        self.chatbox = QtGui.QTextEdit(self)
+        self.chatbox.setMinimumHeight(400)
+        self.chatbox.setReadOnly(True)
 
-        text_entry = QtGui.QTextEdit(self)
+        self.text_entry = QtGui.QTextEdit(self)
         btn_submit = QtGui.QPushButton("Submit")
         btn_submit.clicked.connect(self.submit_message)
         text_hbox = QtGui.QHBoxLayout()
-        text_hbox.addWidget(text_entry)
+        text_hbox.addWidget(self.text_entry)
         text_hbox.addWidget(btn_submit)
 
         vbox = QtGui.QVBoxLayout()
         vbox.addStretch(1)
         vbox.addWidget(self.lbl)
         vbox.addLayout(hbox)
-        vbox.addWidget(chatbox)
+        vbox.addWidget(self.chatbox)
         vbox.addLayout(text_hbox)
         self.setLayout(vbox)
 
@@ -68,7 +68,17 @@ class CryptoPear(QtGui.QWidget):
         self.show()
 
     def submit_message(self):
-        self.server_handler.send_message("I am a robot beep beep")
+        self.server_handler.send_message(self.text_entry.toPlainText())
+        self.text_entry.clear()
+        self.receive_messages()
+
+    def receive_messages(self):
+        self.chatbox.setReadOnly(False)
+        new_messages = self.server_handler.receive_messages()
+        print new_messages
+        self.chatbox.clear()
+        self.chatbox.append(new_messages)
+        self.chatbox.setReadOnly(True)
 
     def set_picture(self, file_path):
         image = QtGui.QImage(file_path)
@@ -99,10 +109,16 @@ class ServerHandler(object):
         self.server.setblocking(0)
 
         self.server.send("The magic word\n")
+        self.messages = []
 
     def send_message(self, outgoing_message):
         print outgoing_message
-        self.server.send(outgoing_message)
+        self.server.send(outgoing_message+'\n')
+
+    def receive_messages(self):
+        data = self.server.recv(BUFFER_S)
+        self.messages.append(data)
+        return "".join(self.messages[-MESSAGE_LIMIT:])
 
 def main():
 
