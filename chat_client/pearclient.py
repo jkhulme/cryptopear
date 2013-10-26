@@ -8,6 +8,8 @@ import string
 import sys
 import os
 import json
+import rsa
+import base64
 
 LOCALHOST, PORT, BUFFER_S = '127.0.0.1', 8008, 1024
 
@@ -25,7 +27,9 @@ server.setblocking(0)
 
 messages = []
 
-server.send("The magic word\n")
+pub, pri = rsa.newkeys(2048, poolsize=4)
+
+server.send(base64.b64encode(pub._save_pkcs1_pem()) + "\n")
 
 def handle_parsed_json(parsed):
   if parsed['type'] == 'quitjoin':
@@ -53,7 +57,8 @@ while True:
     try:
       # Parse received json data
       data = server.recv(BUFFER_S)
-      parsed = json.loads(data)
+      decrypted = rsa.decrypt(base64.b64decode(data), pri)
+      parsed = json.loads(decrypted)
     except ValueError:
       continue
 
