@@ -1,5 +1,7 @@
 require 'thread'
 require 'socket'
+require 'openssl'
+require 'base64'
 
 require_relative 'namespoofer'
 
@@ -10,12 +12,18 @@ class PearClient
 
   def initialize(socket)
     @socket = socket
+    @pubkey = Base64.decode64(socket.gets)
     @messages = Queue.new
     @responder = Thread.new do
       while (message = @messages.pop)
         @socket.puts message
       end
     end
+  end
+
+  def pkey_encrypt(message)
+    key = OpenSSL::PKey::RSA.new @pubkey
+    Base64.encode64 key.public_encrypt(message)
   end
 
   def speak(message)
