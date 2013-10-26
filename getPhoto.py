@@ -1,17 +1,31 @@
-import pygame
-import pygame.camera
-from pygame.locals import *
 
-pygame.init()
-pygame.camera.init()
+from SimpleCV import Camera
+import json
+import voting
 
-camlist = pygame.camera.list_cameras()
-if camlist:
-    cam = pygame.camera.Camera(camlist[0],(640,480))
-cam.start()
-image = cam.get_image()
 
-pygame.display.init()
-screen = pygame.display.set_mode((640, 480))
-screen.blit(image,(0,0))
-pygame.display.flip()
+
+def getCamera():
+	cam = Camera()
+	img = cam.getImage()
+	img.save("mZOMGGUYS.png")
+	return voting.encode_image("mZOMGGUYS.png")
+	
+
+#img.save("my-image.png")
+
+def getUser():
+	name = raw_input("Please enter your real name: ")
+	return name
+
+def getPubKey():
+	return 'abc'
+
+def returnJson():
+	data = [{ 'name':getUser(), 'photo':getCamera(), 'publicKey':getPubKey() }]
+	data_string = json.dumps(data)
+	return data_string
+
+print returnJson()
+
+
