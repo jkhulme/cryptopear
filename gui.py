@@ -6,7 +6,10 @@ from PySide.QtCore import *
 import os
 import socket as sok
 from time import *
-from SimpleCV import Camera
+try:
+    from SimpleCV import Camera
+except:
+    print "no simple cv"
 import json
 
 _main_path = "test_images/"
@@ -74,13 +77,33 @@ class CryptoPear(QWidget):
         self.show()
 
     def get_camera(self):
-        cam = Camera()
-        img = cam.getImage()
-        img.save("mZOMGGUYS.png")
-        return voting.encode_image("mZOMGGUYS.png")
+        try:
+            cam = Camera()
+            img = cam.getImage()
+            img.save("mZOMGGUYS.png")
+        except:
+            pass
+        return voting.encode_image("test_images/test_james.jpeg")
+
+    def get_user(self):
+        text, ok = QInputDialog.getText(self, 'Input Dialog',
+            'Enter your name:')
+
+        if ok:
+            return text
+        else:
+            return None
+
+    def get_pubkey(self):
+        return 'abc'
+
+    def get_json(self):
+        data = [{ 'name':self.get_user(), 'photo':self.get_camera(), 'publicKey':self.get_pubkey() }]
+        data_string = json.dumps(data)
+        return data_string
 
     def connect_to_server(self):
-        self.get_camera()
+        self.get_json()
 
         self.server_handler = ServerHandler()
         self.btn_accept.setDisabled(False)
