@@ -15,6 +15,7 @@ last edited: August 2011
 
 import sys
 from PySide import QtGui
+from os import listdir
 
 class Example(QtGui.QWidget):
 
@@ -23,11 +24,17 @@ class Example(QtGui.QWidget):
 
         self.initUI()
 
-    def initUI(self):
+    def set_image(self, path):
+        pixmap = QtGui.QPixmap(path).scaledToHeight(200)
+        self.lbl = QtGui.QLabel(self)
+        self.lbl.setPixmap(pixmap)
 
-        pixmap = QtGui.QPixmap("test_images/test_james.jpeg")
-        lbl = QtGui.QLabel(self)
-        lbl.setPixmap(pixmap)
+    def cycle_images(self, img_dir):
+        print listdir(img_dir)
+
+    def initUI(self):
+        self.cycle_images("test_images/")
+        self.set_image("test_images/default_image.png")
 
         btn_accept = QtGui.QPushButton("Accept")
         btn_reject = QtGui.QPushButton("Reject")
@@ -41,12 +48,12 @@ class Example(QtGui.QWidget):
 
         vbox = QtGui.QVBoxLayout()
         vbox.addStretch(1)
-        vbox.addWidget(lbl)
+        vbox.addWidget(self.lbl)
         vbox.addLayout(hbox)
 
         self.setLayout(vbox)
 
-        self.setGeometry(300, 300, 300, 150)
+        #self.setGeometry(300, 300, 300, 150)
         self.setWindowTitle('CryptoPear')
         self.show()
 
