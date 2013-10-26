@@ -26,22 +26,26 @@ class CryptoPear(QWidget):
         return map(lambda f: path + f, files)
 
     def initUI(self):
-        self.server_handler = ServerHandler()
         self.paths = self.list_files()
 
         pixmap = QPixmap(self.paths.pop(0)).scaledToHeight(200)
         self.lbl = QLabel(self)
         self.lbl.setPixmap(pixmap)
 
-        btn_accept = QPushButton("Accept")
-        btn_reject = QPushButton("Reject")
-        btn_accept.clicked.connect(self.accept_participent)
-        btn_reject.clicked.connect(self.reject_participent)
+        self.btn_connect = QPushButton("Connect")
+        self.btn_connect.clicked.connect(self.connect_to_server)
+        self.btn_accept = QPushButton("Accept")
+        self.btn_reject = QPushButton("Reject")
+        self.btn_accept.clicked.connect(self.accept_participent)
+        self.btn_reject.clicked.connect(self.reject_participent)
+        self.btn_accept.setDisabled(True)
+        self.btn_reject.setDisabled(True)
 
         hbox = QHBoxLayout()
         hbox.addStretch(1)
-        hbox.addWidget(btn_accept)
-        hbox.addWidget(btn_reject)
+        hbox.addWidget(self.btn_connect)
+        hbox.addWidget(self.btn_accept)
+        hbox.addWidget(self.btn_reject)
 
         self.chatbox = QTextEdit(self)
         self.chatbox.setMinimumHeight(400)
@@ -67,6 +71,12 @@ class CryptoPear(QWidget):
         self.setWindowTitle('CryptoPear')
         self.show()
 
+    def connect_to_server(self):
+        self.server_handler = ServerHandler()
+        self.btn_accept.setDisabled(False)
+        self.btn_reject.setDisabled(False)
+        self.btn_connect.setDisabled(True)
+
         self.thread = MessageThread(self.chatbox, self.server_handler)
         self.thread.message.connect(self.append_messages, Qt.QueuedConnection)
         self.handletoggle()
@@ -86,8 +96,10 @@ class CryptoPear(QWidget):
             self.thread.start()
 
     def submit_message(self):
-        self.server_handler.send_message(self.text_entry.toPlainText())
-        self.text_entry.clear()
+        message = self.text_entry.toPlainText()
+        if message:
+            self.server_handler.send_message(message)
+            self.text_entry.clear()
 
     def set_picture(self, file_path):
         image = QImage(file_path)
