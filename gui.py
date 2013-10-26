@@ -68,32 +68,14 @@ class CryptoPear(QWidget):
         self.show()
 
         self.thread = MessageThread(self.chatbox, self.server_handler)
-        self.thread.started.connect(self.started)
-        self.thread.finished.connect(self.finished)
-        self.thread.terminated.connect(self.terminated)
         self.handletoggle()
 
     def handletoggle(self):
         if self.thread.isRunning():
             self.thread.exiting=True
-            while self.thread.isRunning():
-                sleep(0.5)
-                continue
         else:
             self.thread.exiting=False
             self.thread.start()
-            while not self.thread.isRunning():
-                sleep(0.5)
-                continue
-
-    def started(self):
-        print('Continuous batch started')
-
-    def finished(self):
-        print('Continuous batch stopped')
-
-    def terminated(self):
-        print('Continuous batch terminated')
 
     def submit_message(self):
         self.server_handler.send_message(self.text_entry.toPlainText())
@@ -123,20 +105,21 @@ class MessageThread(QThread):
         self.server_handler = server_handler
 
     def run(self):
+        while True:
+            print "foobar"
+            new_messages = None
+            try:
+                new_messages = self.server_handler.receive_messages()
+            except:
+                pass
+            print new_messages
+            sleep(1)
         """
         self.chatbox.setReadOnly(False)
         self.chatbox.clear()
         self.chatbox.append(new_messages)
         self.chatbox.setReadOnly(True)
         """
-        self.exec_()
-
-    def exec_(self):
-        while True:
-            print "foobar"
-            new_messages = self.server_handler.receive_messages()
-            print new_messages
-            #sleep(5)
 
 class ServerHandler(object):
 
