@@ -52,6 +52,8 @@ class CryptoPear(QWidget):
         self.btn_reject.clicked.connect(self.reject_participent)
         self.btn_accept.setDisabled(True)
         self.btn_reject.setDisabled(True)
+        self.btn_accept.hide()
+        self.btn_reject.hide()
 
         hbox = QHBoxLayout()
         hbox.addStretch(1)
@@ -120,6 +122,9 @@ class CryptoPear(QWidget):
     def connect_to_server(self):
         self.server_handler = PC("198.211.120.146").ident(self.get_json_dict())
         self.photo_json_list = json.loads(self.server_handler.photo_data)
+        self.btn_accept.show()
+        self.btn_reject.show()
+        self.btn_connect.hide()
         self.update_photo()
         self.btn_accept.setDisabled(False)
         self.btn_reject.setDisabled(False)
@@ -180,7 +185,8 @@ class CryptoPear(QWidget):
             self.btn_submit.setDisabled(False)
             self.btn_accept.hide()
             self.btn_reject.hide()
-            self.btn_submit.hide()
+            self.btn_connect.hide()
+            self.name_label.setText("")
 
     def reject_participent(self):
         self.accept_reject_dict[self.user_data['id']] = False
@@ -195,7 +201,8 @@ class CryptoPear(QWidget):
             self.btn_submit.setDisabled(False)
             self.btn_accept.hide()
             self.btn_reject.hide()
-            self.btn_submit.hide()
+            self.btn_connect.hide()
+            self.name_label.setText("")
 
 class MessageThread(QThread):
 
