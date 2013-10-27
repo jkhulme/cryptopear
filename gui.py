@@ -1,21 +1,14 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 import sys
 from PySide.QtGui import *
 from PySide.QtCore import *
 import os
 import voting
-import socket as sok
 from time import *
 try:
     from SimpleCV import Camera
 except:
     print "no simple cv"
-import json
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_OAEP
-import base64
-from event_printer import handle_event_json
 from chat_client.pearclient import PearClient as PC
 
 _main_path = "test_images/"
@@ -131,7 +124,7 @@ class CryptoPear(QWidget):
     def submit_message(self):
         message = self.text_entry.toPlainText()
         if message:
-            self.server_handler.encrypted_send(message)
+            self.server_handler.encrypted_send(message+'\n')
             self.text_entry.clear()
 
     def set_picture(self, file_path):
