@@ -26,9 +26,7 @@ class Pearader
   def broadcast_all(client)
     ready = false
     while !ready
-      @mutex.synchronize do
-        ready = @num_connects == @total
-      end
+      @mutex.synchronize { ready = @num_connects == @total }
       break if ready
       puts "Waiting for everyone"
       sleep 1

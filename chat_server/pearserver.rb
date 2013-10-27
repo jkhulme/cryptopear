@@ -23,12 +23,14 @@ class PearServer
   def block_until_all_ready
     ready = false
     while !ready
-      @mutex.synchronize do
-        ready = @ready == @total
-      end
+      @mutex.synchronize { ready = @ready == @total }
       break if ready
       sleep 1
     end
+  end
+
+  def client_ready
+    @mutex.synchronize { @ready += 1 }
   end
 
   def work
@@ -51,11 +53,10 @@ class PearServer
         pearader.connect(client).broadcast_all(client)
 
         votes = client.listen
-        @mutex.synchronize do
-          @ready += 1
-        end
 
+        client_ready
         block_until_all_ready
+
         announce quitjoin_event :join, client.name
 
         # Relay any received data to the other clients
