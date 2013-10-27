@@ -72,7 +72,7 @@ class PearClient:
     print "Sending our pubkey"
     identity_dict = {'type' : 'ident', 'ident' : my_ident}
     identity_dict['ident']['pubkey'] = self.pub.exportKey()
-    self.__send__(self.pub.exportKey())
+    self.__send__(json.dumps(identity_dict))
     print "Receiving server's pubkey"
     data = self.__receive__()
     key = json.loads(data)['pubkey']

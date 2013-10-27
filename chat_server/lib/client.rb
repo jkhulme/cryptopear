@@ -2,6 +2,7 @@ require 'thread'
 require 'socket'
 require 'openssl'
 require 'base64'
+require 'json'
 
 require_relative 'namespoofer'
 
@@ -13,7 +14,9 @@ class PearClient
   def initialize(socket, encoded_pubkey)
     @socket = socket
     puts "Receiving their pubkey"
-    @pubkey = Base64.decode64(socket.gets)
+    ident = JSON.parse(Base64.decode64(socket.gets))
+    puts ident
+    @pubkey = ident['ident']['pubkey']
     @messages = Queue.new
     puts "Sending out pubkey"
     @messages.push (encoded_pubkey << "\n")
