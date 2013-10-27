@@ -63,6 +63,13 @@ class PearClient:
   def encrypted_send(self, data):
     self.__send__(self.__encrypt__(data))
 
+  def get_recent_messages(self):
+    data = self.decrypted_receive()
+    message = handle_event_json(json.loads(data))
+    self.messages.append(message)
+    return self.messages[-MESSAGE_LIMIT:]
+
+
   def ident(self, my_ident):
     print "Sending our pubkey"
     identity_dict = {'type' : 'ident', 'ident' : my_ident}
@@ -88,16 +95,9 @@ class PearClient:
       #Check if there there is any received data in the socket buffer
       sock_action = select.select([self.server], [], [], IO_TIMEOUT_S)[0]
       if sock_action:
-        # Parse received json data
-        data = self.decrypted_receive()
-        parsed = json.loads(data)
-
-        message = handle_event_json(parsed)
-        self.messages.append(message)
-
         # Replace the screen contents with the updated message buffer
         os.system('clear')
-        print "".join(self.messages[-MESSAGE_LIMIT:])
+        print "".join(self.get_recent_messages())
     self.server.close()
 
 if __name__ == "__main__":
