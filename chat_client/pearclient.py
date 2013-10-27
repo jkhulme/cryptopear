@@ -7,7 +7,8 @@ import string
 import sys
 import os
 import json
-import rsa
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
 import base64
 
 from event_printer import handle_event_json
@@ -29,20 +30,39 @@ class PearClient:
     self.server = server
 
     self.messages = []
+    print "Generating RSA keypair..."
+    new_key = RSA.generate(1024, e=65537)
 
-    self.pub, self.pri = rsa.newkeys(2048, poolsize=4)
+    self.pub = new_key.publickey()
+    self.pri = new_key
+    print "Generated pubkey: " + self.pub.exportKey()
 
   def __decrypt__(self, data):
-    return rsa.decrypt(base64.b64decode(data), self.pri)
+    def pkcs1_unpad(text):
+      if len(text) > 0 and text[0] == '\x02':
+        # Find end of padding marked by nul
+        pos = text.find('\x00')
+        if pos > 0:
+          return text[pos+1:]
+      return None
+    decrypted = self.pri.decrypt(base64.b64decode(data))
+    return pkcs1_unpad(decrypted)
+
+  def __encrypt__(self, data):
+    encrypted = PKCS1_OAEP.new(self.server_pub).encrypt(data)
+    return base64.b64encode(encrypted) + "\n"
 
   def ident(self):
-    self.server.send(base64.b64encode(self.pub._save_pkcs1_pem()) + "\n")
+    print "Sending our pubkey"
+    self.server.send(base64.b64encode(self.pub.exportKey()) + "\n")
+    print "Receiving server's pubkey"
     data = self.server.recv(BUFFER_S)
-    print data
-    self.server_pub = base64.b64decode(data)
     self.server.setblocking(0)
-    print "getting pub"
-    print self.server_pub
+    decoded = base64.b64decode(data)
+    key = json.loads(decoded)['pubkey']
+    self.server_pub = RSA.importKey(key)
+    print "Stored pubkey: " + self.server_pub.exportKey()
+    print "Ident complete"
     return self
 
   def loop(self):
@@ -51,17 +71,14 @@ class PearClient:
       term_action = select.select([sys.stdin], [], [], IO_TIMEOUT_S)[0]
       if term_action:
         outgoing_message = sys.stdin.readline()
-        self.server.send(outgoing_message)
+        self.server.send(self.__encrypt__(outgoing_message))
 
       #Check if there there is any received data in the socket buffer
       sock_action = select.select([self.server], [], [], IO_TIMEOUT_S)[0]
       if sock_action:
-        try:
-          # Parse received json data
-          data = self.server.recv(BUFFER_S)
-          parsed = json.loads(self.__decrypt__(data))
-        except ValueError:
-          continue
+        # Parse received json data
+        data = self.server.recv(BUFFER_S)
+        parsed = json.loads(self.__decrypt__(data))
 
         message = handle_event_json(parsed)
         self.messages.append(message)

@@ -12,14 +12,17 @@ class PearClient
 
   def initialize(socket, encoded_pubkey)
     @socket = socket
+    puts "Receiving their pubkey"
     @pubkey = Base64.decode64(socket.gets)
-    @socket.puts encoded_pubkey
     @messages = Queue.new
+    puts "Sending out pubkey"
+    @messages.push (encoded_pubkey << "\n")
     @responder = Thread.new do
       while (message = @messages.pop)
         @socket.puts message
       end
     end
+    puts "Ident complete"
   end
 
   def pkey_encrypt(message)
@@ -32,7 +35,7 @@ class PearClient
   end
 
   def listen
-    @socket.gets
+   @socket.gets
   end
 
   def commit

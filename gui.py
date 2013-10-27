@@ -106,9 +106,8 @@ class CryptoPear(QWidget):
         return data_string
 
     def connect_to_server(self):
-        self.get_json()
-
         self.server_handler = ServerHandler()
+        self.server_handler.send_message(self.get_json())
         self.btn_accept.setDisabled(False)
         self.btn_reject.setDisabled(False)
         self.btn_connect.setDisabled(True)
@@ -119,6 +118,7 @@ class CryptoPear(QWidget):
 
     def append_messages(self, messages):
         if messages:
+            self.chatbox.setTextColor('red')
             self.chatbox.setReadOnly(False)
             self.chatbox.clear()
             self.chatbox.append(messages)
