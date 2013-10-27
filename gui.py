@@ -196,8 +196,8 @@ class ServerHandler(object):
         self.server.send(base64.b64encode(self.pub.exportKey()) + "\n")
         data = self.server.recv(BUFFER_S)
         decoded = base64.b64decode(data)
-        print decoded
         key = json.loads(decoded)['pubkey']
+        print key
         self.server_pub = RSA.importKey(key)
 
     def __decrypt__(self, data):
@@ -212,6 +212,8 @@ class ServerHandler(object):
         return pkcs1_unpad(decrypted)
 
     def __encrypt__(self, data):
+        print data
+        print self.server_pub.exportKey()
         encrypted = PKCS1_OAEP.new(self.server_pub).encrypt(data)
         return base64.b64encode(encrypted) + "\n"
 
