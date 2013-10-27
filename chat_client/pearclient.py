@@ -63,8 +63,9 @@ class PearClient:
   def encrypted_send(self, data):
     self.__send__(self.__encrypt__(data))
 
-  def ident(self, identity_dict):
+  def ident(self, my_ident):
     print "Sending our pubkey"
+    identity_dict = {'type' : 'ident', 'ident' : my_ident}
     identity_dict['ident']['pubkey'] = self.pub.exportKey()
     self.__send__(self.pub.exportKey())
     print "Receiving server's pubkey"
@@ -101,7 +102,6 @@ class PearClient:
 
 if __name__ == "__main__":
   my_ident = {
-    'type' : 'ident',
-    'ident' : { 'name' : 'Anne Onymous', 'img' : 'Null' }
+    'name' : 'Anne Onymous', 'photo' : 'Null'
   }
   PearClient(destination=DESTINATION).ident(my_ident).loop()
