@@ -44,7 +44,7 @@ class PearServer
         end
       rescue Exception => ex
         errors.push ex
-        errors.pushex.backtrace
+        errors.push ex.backtrace
       end
     } }
   end
