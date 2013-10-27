@@ -10,14 +10,14 @@ require_relative './lib/client'
 
 class PearServer
 
-  def initialize
+  def initialize(total)
     @mutex = Mutex.new
     @server_socket = TCPServer.new 8008
     @rsa = OpenSSL::PKey::RSA.new(2048)
     puts "Generated pubkey: " << @rsa.public_key.to_pem
 
     @ready = 0
-    @total = 1
+    @total = total
   end
 
   def block_until_all_ready
@@ -128,5 +128,5 @@ class PearServer
 
 end
 
-PearServer.new.work
+PearServer.new(ARGV.last.to_i).work
 
