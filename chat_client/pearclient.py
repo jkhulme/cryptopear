@@ -102,4 +102,5 @@ class PearClient:
         print "".join(self.messages[-MESSAGE_LIMIT:])
     self.server.close()
 
-PearClient().ident().loop()
+if __name__ == "__main__":
+  PearClient().ident().loop()
