@@ -96,8 +96,10 @@ class PearClient:
     print "Ident complete"
 
     self.photo_data = self.__receive__()
-    print "Broadcast of all = " + self.photo_data
-    self.__send__("Come at me bro")
+    return self
+
+  def vote_result(self, vote_json):
+    self.__send__(vote_json)
     return self
 
   def loop(self):

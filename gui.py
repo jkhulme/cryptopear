@@ -170,7 +170,7 @@ class CryptoPear(QWidget):
         if self.photo_json_list:
             self.update_photo()
         else:
-            self.server_handler.encrypted_send(json.dumps(self.accept_reject_dict))
+            self.server_handler.vote_result(json.dumps(self.accept_reject_dict))
             self.btn_accept.setDisabled(True)
             self.btn_reject.setDisabled(True)
             self.btn_submit.setDisabled(False)
@@ -181,7 +181,7 @@ class CryptoPear(QWidget):
             self.update_photo()
         else:
             print self.user_data
-            self.server_handler.encrypted_send(json.dumps(self.accept_reject_dict))
+            self.server_handler.vote_result(json.dumps(self.accept_reject_dict))
             self.btn_accept.setDisabled(True)
             self.btn_reject.setDisabled(True)
             self.btn_submit.setDisabled(False)
