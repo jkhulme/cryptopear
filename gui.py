@@ -176,7 +176,7 @@ class MessageThread(QThread):
             except:
                 pass
             self.message.emit(new_messages)
-            sleep(1)
+            #sleep(1)
 
 def main():
     app = QApplication(sys.argv)
