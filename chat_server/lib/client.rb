@@ -25,10 +25,10 @@ class Pearader
 
   def broadcast_all(client)
     ready = false
-    while !ready
+    until ready
       @mutex.synchronize { ready = @num_connects == @total }
       break if ready
-      puts "Waiting for everyone"
+      puts "Waiting for everyone, #{@num_connects} so far"
       sleep 1
     end
 
@@ -55,7 +55,7 @@ class PearClient
     @messages.push (encoded_pubkey << "\n")
     @responder = Thread.new do
       while (message = @messages.pop)
-        @socket.puts Base64.encode64(message)
+        @socket.write (Base64.encode64(message) << "\n")
       end
     end
     puts "Ident complete"
