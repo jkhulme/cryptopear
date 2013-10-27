@@ -122,7 +122,7 @@ class CryptoPear(QWidget):
             self.thread.start()
 
     def submit_message(self):
-        message = self.text_entry.toPlainText()
+        message = self.text_entry.toPlainText().encode('ascii')
         if message:
             self.server_handler.encrypted_send(message+'\n')
             self.text_entry.clear()
