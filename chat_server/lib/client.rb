@@ -58,6 +58,7 @@ class PearClient
       while (message = @messages.pop)
         @socket.write (Base64.encode64(message) << "\0\n")
         @socket.flush
+        sleep 0.01
       end
     end
     puts "Ident complete"
@@ -73,7 +74,7 @@ class PearClient
   end
 
   def listen
-   Base64.decode64 @socket.gets
+    Base64.decode64 @socket.gets
   end
 
   def commit
