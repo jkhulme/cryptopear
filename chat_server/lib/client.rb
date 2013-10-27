@@ -44,6 +44,7 @@ class PearClient
 
   def initialize(socket, encoded_pubkey)
     @socket = socket
+    @socket.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_NODELAY, 1)
     puts "Receiving their pubkey"
     ident = JSON.parse(listen)
     puts ident
@@ -52,10 +53,11 @@ class PearClient
     @pubkey = ident['ident']['pubkey']
     @messages = Queue.new
     puts "Sending out pubkey"
-    @messages.push (encoded_pubkey << "\n")
+    @messages.push encoded_pubkey
     @responder = Thread.new do
       while (message = @messages.pop)
-        @socket.write (Base64.encode64(message) << "\n")
+        @socket.write (Base64.encode64(message) << "\0\n")
+        @socket.flush
       end
     end
     puts "Ident complete"

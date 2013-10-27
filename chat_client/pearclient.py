@@ -12,7 +12,7 @@ import base64
 
 from event_printer import handle_event_json
 
-LOCALHOST, PORT, BUFFER_S = '127.0.0.1', 8008, 1024
+LOCALHOST, PORT, BUFFER_S = '127.0.0.1', 8008, 4096
 
 if len(sys.argv) > 1:
   DESTINATION = sys.argv[1]
@@ -29,7 +29,7 @@ class PearClient:
 
     self.messages = []
     print "Generating RSA keypair..."
-    new_key = RSA.generate(1024, e=65537)
+    new_key = RSA.generate(2048, e=65537)
 
     self.pub = new_key.publickey()
     self.pri = new_key
@@ -54,8 +54,18 @@ class PearClient:
     self.server.send(base64.b64encode(data) + "\n")
 
   def __receive__(self):
-    data = base64.b64decode(self.server.recv(BUFFER_S))
-    return data
+    end = False
+    chunks = []
+    while not end:
+      chunk = self.server.recv(BUFFER_S)
+      chunks.append(chunk)
+      terminus = chunk[-2:]
+      if terminus == "\x00\n":
+        end = True
+        data = ''.join(chunks)
+
+    decoded = base64.b64decode(data)
+    return decoded
 
   def decrypted_receive(self):
     return self.__decrypt__(self.__receive__())
@@ -76,8 +86,11 @@ class PearClient:
     self.__send__(json.dumps(identity_dict))
     print "Receiving server's pubkey"
     data = self.__receive__()
-    key = json.loads(data)['pubkey']
-    self.server_pub = RSA.importKey(key)
+    try:
+      key = json.loads(data)['pubkey']
+      self.server_pub = RSA.importKey(key)
+    except ValueError:
+      print "Got JSON: " + data
     print "Stored pubkey: " + self.server_pub.exportKey()
     print "Ident complete"
 

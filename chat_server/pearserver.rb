@@ -13,7 +13,7 @@ class PearServer
   def initialize
     @mutex = Mutex.new
     @server_socket = TCPServer.new 8008
-    @rsa = OpenSSL::PKey::RSA.new(1024)
+    @rsa = OpenSSL::PKey::RSA.new(2048)
     puts "Generated pubkey: " << @rsa.public_key.to_pem
 
     @ready = 0
