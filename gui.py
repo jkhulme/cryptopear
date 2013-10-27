@@ -10,6 +10,8 @@ try:
 except:
     print "no simple cv"
 from chat_client.pearclient import PearClient as PC
+import json
+import random
 
 _main_path = "test_images/"
 LOCALHOST, PORT, BUFFER_S = '127.0.0.1', 8008, 1024
@@ -24,13 +26,18 @@ class CryptoPear(QWidget):
 
         self.initUI()
 
-    def list_files(self):
+    def listdir(self):
         path = os.getcwd() + '/test_images/'
         files = os.listdir(path)
         return map(lambda f: path + f, files)
 
+    def random_path(self):
+        return self.paths[random.randint(0, len(self.paths) - 1)]
+
     def initUI(self):
-        self.paths = self.list_files()
+        self.paths = self.listdir()
+        self.photo_json_list = []
+        self.accept_reject_dict = {}
 
         pixmap = QPixmap(self.paths.pop(0)).scaledToHeight(200)
         self.lbl = QLabel(self)
@@ -57,11 +64,12 @@ class CryptoPear(QWidget):
 
         self.text_entry = QTextEdit(self)
         self.text_entry.installEventFilter(self)
-        btn_submit = QPushButton("Submit")
-        btn_submit.clicked.connect(self.submit_message)
+        self.btn_submit = QPushButton("Submit")
+        self.btn_submit.clicked.connect(self.submit_message)
+        self.btn_submit.setDisabled(True)
         text_hbox = QHBoxLayout()
         text_hbox.addWidget(self.text_entry)
-        text_hbox.addWidget(btn_submit)
+        text_hbox.addWidget(self.btn_submit)
 
         vbox = QVBoxLayout()
         vbox.addStretch(1)
@@ -86,8 +94,6 @@ class CryptoPear(QWidget):
 
         return False
 
-
-
     def get_camera(self):
         try:
             cam = Camera()
@@ -95,7 +101,7 @@ class CryptoPear(QWidget):
             img.save("mZOMGGUYS.png")
         except:
             pass
-        return voting.encode_image("test_images/test_james.jpeg")
+        return voting.encode_image(self.random_path())
 
     def get_user(self):
         text, ok = QInputDialog.getText(self, 'Input Dialog',
@@ -111,6 +117,8 @@ class CryptoPear(QWidget):
 
     def connect_to_server(self):
         self.server_handler = PC("198.211.120.146").ident(self.get_json_dict())
+        self.photo_json_list = json.loads(self.server_handler.photo_data)
+        self.update_photo()
         self.btn_accept.setDisabled(False)
         self.btn_reject.setDisabled(False)
         self.btn_connect.setDisabled(True)
@@ -150,14 +158,33 @@ class CryptoPear(QWidget):
         self.lbl.setPixmap(QPixmap.fromImage(image).scaledToHeight(200))
         self.lbl.adjustSize()
 
+    def update_photo(self):
+        self.user_data = self.photo_json_list.pop(0)
+        voting.decode_image(self.user_data['photo'], self.user_data['name'])
+        path = os.getcwd() + '/test_images/' + self.user_data['name'] + '.jpeg'
+        print path
+        self.set_picture(path)
+
     def accept_participent(self):
-        self.set_picture(self.paths.pop(0))
+        self.accept_reject_dict[self.user_data['id']] = True
+        if self.photo_json_list:
+            self.update_photo()
+        else:
+            self.server_handler.encrypted_send(json.dumps(self.accept_reject_dict))
+            self.btn_accept.setDisabled(True)
+            self.btn_reject.setDisabled(True)
+            self.btn_submit.setDisabled(False)
 
     def reject_participent(self):
-        print "participant rejected"
-
-    def pretty_json(self, msg_json):
-        return msg_json
+        self.accept_reject_dict[self.user_data['id']] = False
+        if self.photo_json_list:
+            self.update_photo()
+        else:
+            print self.user_data
+            self.server_handler.encrypted_send(json.dumps(self.accept_reject_dict))
+            self.btn_accept.setDisabled(True)
+            self.btn_reject.setDisabled(True)
+            self.btn_submit.setDisabled(False)
 
 class MessageThread(QThread):
 
@@ -176,7 +203,6 @@ class MessageThread(QThread):
             except:
                 pass
             self.message.emit(new_messages)
-            #sleep(1)
 
 def main():
     app = QApplication(sys.argv)
