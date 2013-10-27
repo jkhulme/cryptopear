@@ -24,9 +24,9 @@ IO_TIMEOUT_S = 0.1
 MESSAGE_LIMIT = 40
 
 class PearClient:
-  def __init__(self):
+  def __init__(self, destination=LOCALHOST):
     self.server = sok.socket(sok.AF_INET, sok.SOCK_STREAM)
-    self.server.connect((DESTINATION, PORT))
+    self.server.connect((destination, PORT))
 
     self.messages = []
     print "Generating RSA keypair..."
@@ -103,4 +103,4 @@ class PearClient:
     self.server.close()
 
 if __name__ == "__main__":
-  PearClient().ident().loop()
+  PearClient(destination=DESTINATION).ident().loop()
