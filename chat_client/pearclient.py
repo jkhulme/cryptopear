@@ -24,6 +24,7 @@ MESSAGE_LIMIT = 40
 
 class PearClient:
   def __init__(self, destination=LOCALHOST):
+    self.photo_data = None
     self.server = sok.socket(sok.AF_INET, sok.SOCK_STREAM)
     self.server.connect((destination, PORT))
 
@@ -94,7 +95,8 @@ class PearClient:
     print "Stored pubkey: " + self.server_pub.exportKey()
     print "Ident complete"
 
-    print "Broadcast of all = " + self.__receive__()
+    self.photo_data = self.__receive__()
+    print "Broadcast of all = " + self.photo_data
     self.__send__("Come at me bro")
     return self
 
