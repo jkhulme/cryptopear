@@ -38,8 +38,8 @@ class CryptoPear(QWidget):
         self.paths = self.listdir()
         self.photo_json_list = []
         self.accept_reject_dict = {}
-
-        pixmap = QPixmap(self.paths.pop(0)).scaledToHeight(200)
+        self.default_image = self.paths.pop(0)
+        pixmap = QPixmap(self.default_image).scaledToHeight(200)
         self.lbl = QLabel(self)
         self.lbl.setPixmap(pixmap)
 
@@ -171,6 +171,7 @@ class CryptoPear(QWidget):
             self.update_photo()
         else:
             self.server_handler.vote_result(json.dumps(self.accept_reject_dict))
+            self.set_picture(self.default_image)
             self.btn_accept.setDisabled(True)
             self.btn_reject.setDisabled(True)
             self.btn_submit.setDisabled(False)
@@ -182,6 +183,7 @@ class CryptoPear(QWidget):
         else:
             print self.user_data
             self.server_handler.vote_result(json.dumps(self.accept_reject_dict))
+            self.set_picture(self.default_image)
             self.btn_accept.setDisabled(True)
             self.btn_reject.setDisabled(True)
             self.btn_submit.setDisabled(False)
