@@ -17,7 +17,7 @@ class PearServer
     puts "Generated pubkey: " << @rsa.public_key.to_pem
 
     @ready = 0
-    @total = 2
+    @total = 1
   end
 
   def block_until_all_ready
