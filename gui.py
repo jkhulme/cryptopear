@@ -16,6 +16,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 import base64
 from event_printer import handle_event_json
+from chat_client.pearclient import PearClient as PC
 
 _main_path = "test_images/"
 LOCALHOST, PORT, BUFFER_S = '127.0.0.1', 8008, 1024
@@ -98,17 +99,12 @@ class CryptoPear(QWidget):
         else:
             return None
 
-    def get_pubkey(self):
-        return 'abc'
-
-    def get_json(self):
-        data = [{ 'name':self.get_user(), 'photo':self.get_camera(), 'publicKey':self.get_pubkey() }]
-        data_string = json.dumps(data)
-        return data_string
+    def get_json_dict(self):
+        data = { 'name':self.get_user(), 'photo':self.get_camera()}
+        return data
 
     def connect_to_server(self):
-        self.server_handler = ServerHandler()
-        #self.server_handler.send_message(self.get_json())
+        self.server_handler = PC("198.211.120.146").ident(self.get_json_dict())
         self.btn_accept.setDisabled(False)
         self.btn_reject.setDisabled(False)
         self.btn_connect.setDisabled(True)
@@ -135,7 +131,7 @@ class CryptoPear(QWidget):
     def submit_message(self):
         message = self.text_entry.toPlainText()
         if message:
-            self.server_handler.send_message(message)
+            self.server_handler.encrypted_send(message)
             self.text_entry.clear()
 
     def set_picture(self, file_path):
@@ -170,67 +166,11 @@ class MessageThread(QThread):
         while True:
             new_messages = None
             try:
-                new_messages = self.server_handler.receive_messages()
+                new_messages = self.server_handler.decrypted_recieve()
             except:
                 pass
             self.message.emit(new_messages)
             sleep(1)
-
-class ServerHandler(object):
-
-    def __init__(self):
-        if True:
-            DESTINATION = '198.211.120.146'
-        else:
-            DESTINATION = LOCALHOST
-
-        self.server = sok.socket(sok.AF_INET, sok.SOCK_STREAM)
-        self.server.connect((DESTINATION, PORT))
-
-        self.messages = []
-
-        new_key = RSA.generate(1024, e=65537)
-        self.pub = new_key.publickey()
-        self.pri = new_key
-
-        self.server.send(base64.b64encode(self.pub.exportKey()) + "\n")
-        data = self.server.recv(BUFFER_S)
-        decoded = base64.b64decode(data)
-        key = json.loads(decoded)['pubkey']
-        print key
-        self.server_pub = RSA.importKey(key)
-
-    def __decrypt__(self, data):
-        def pkcs1_unpad(text):
-            if len(text) > 0 and text[0] == '\x02':
-                # Find end of padding marked by nul
-                pos = text.find('\x00')
-                if pos > 0:
-                    return text[pos+1:]
-                return None
-        decrypted = self.pri.decrypt(base64.b64decode(data))
-        return pkcs1_unpad(decrypted)
-
-    def __encrypt__(self, data):
-        print data
-        print self.server_pub.exportKey()
-        encrypted = PKCS1_OAEP.new(self.server_pub).encrypt(data)
-        return base64.b64encode(encrypted) + "\n"
-
-    def send_message(self, outgoing_message):
-        self.server.send(self.__encrypt__(outgoing_message))
-
-    def receive_messages(self):
-        try:
-            # Parse received json data
-            data = self.server.recv(BUFFER_S)
-            parsed = json.loads(self.__decrypt__(data))
-        except ValueError:
-            print "Value Error"
-
-        message = handle_event_json(parsed)
-        self.messages.append(message)
-        return "".join(self.messages[-MESSAGE_LIMIT:])
 
 def main():
     app = QApplication(sys.argv)
