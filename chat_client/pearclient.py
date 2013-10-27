@@ -69,7 +69,6 @@ class PearClient:
     self.messages.append(message)
     return self.messages[-MESSAGE_LIMIT:]
 
-
   def ident(self, my_ident):
     print "Sending our pubkey"
     identity_dict = {'type' : 'ident', 'ident' : my_ident}
