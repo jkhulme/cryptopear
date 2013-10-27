@@ -56,6 +56,7 @@ class CryptoPear(QWidget):
         self.chatbox.setReadOnly(True)
 
         self.text_entry = QTextEdit(self)
+        self.text_entry.installEventFilter(self)
         btn_submit = QPushButton("Submit")
         btn_submit.clicked.connect(self.submit_message)
         text_hbox = QHBoxLayout()
@@ -74,6 +75,18 @@ class CryptoPear(QWidget):
         self.setGeometry(0, 0, 500, 700)
         self.setWindowTitle('CryptoPear')
         self.show()
+
+    def eventFilter(self, obj, event):
+        if obj == self.text_entry:
+            if isinstance(event, QKeyEvent):
+                if event.key() == Qt.Key_Return:
+                    if event.type() == QEvent.KeyPress:
+                        self.submit_message()
+                        return True
+
+        return False
+
+
 
     def get_camera(self):
         try:
