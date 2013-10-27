@@ -40,7 +40,7 @@ class PearServer
       end
     end
 
-    pearader = Pearader.new(2)
+    pearader = Pearader.new(@total)
 
     # Spawn a new worker thread for each client socket opened
     loop { Thread.start(@server_socket.accept) { |client_socket|
