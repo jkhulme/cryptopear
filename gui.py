@@ -42,11 +42,12 @@ class CryptoPear(QWidget):
         pixmap = QPixmap(self.default_image).scaledToHeight(200)
         self.lbl = QLabel(self)
         self.lbl.setPixmap(pixmap)
+        self.name_label = QLabel(self)
 
         self.btn_connect = QPushButton("Connect")
         self.btn_connect.clicked.connect(self.connect_to_server)
-        self.btn_accept = QPushButton("Accept")
-        self.btn_reject = QPushButton("Reject")
+        self.btn_accept = QPushButton("Yes")
+        self.btn_reject = QPushButton("No")
         self.btn_accept.clicked.connect(self.accept_participent)
         self.btn_reject.clicked.connect(self.reject_participent)
         self.btn_accept.setDisabled(True)
@@ -74,6 +75,7 @@ class CryptoPear(QWidget):
         vbox = QVBoxLayout()
         vbox.addStretch(1)
         vbox.addWidget(self.lbl)
+        vbox.addWidget(self.name_label)
         vbox.addLayout(hbox)
         vbox.addWidget(self.chatbox)
         vbox.addLayout(text_hbox)
@@ -164,6 +166,7 @@ class CryptoPear(QWidget):
         path = os.getcwd() + '/test_images/' + self.user_data['name'] + '.jpeg'
         print path
         self.set_picture(path)
+        self.name_label.setText('Is this ' + self.user_data['name'] + '?')
 
     def accept_participent(self):
         self.accept_reject_dict[self.user_data['id']] = True
@@ -175,6 +178,9 @@ class CryptoPear(QWidget):
             self.btn_accept.setDisabled(True)
             self.btn_reject.setDisabled(True)
             self.btn_submit.setDisabled(False)
+            self.btn_accept.hide()
+            self.btn_reject.hide()
+            self.btn_submit.hide()
 
     def reject_participent(self):
         self.accept_reject_dict[self.user_data['id']] = False
@@ -187,6 +193,9 @@ class CryptoPear(QWidget):
             self.btn_accept.setDisabled(True)
             self.btn_reject.setDisabled(True)
             self.btn_submit.setDisabled(False)
+            self.btn_accept.hide()
+            self.btn_reject.hide()
+            self.btn_submit.hide()
 
 class MessageThread(QThread):
 
