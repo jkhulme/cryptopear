@@ -49,7 +49,7 @@ class PearClient:
 
   def __encrypt__(self, data):
     encrypted = PKCS1_OAEP.new(self.server_pub).encrypt(data)
-    return base64.b64encode(encrypted)
+    return encrypted
 
   def __send__(self, data):
     self.server.send(base64.b64encode(data) + "\n")
