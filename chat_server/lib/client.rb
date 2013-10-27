@@ -17,7 +17,7 @@ class Pearader
 
   def connect(client)
     @mutex.synchronize do
-      @connected.push({name: client.realname, photo: client.photo})
+      @connected.push({id: client.id, name: client.realname, photo: client.photo})
       @num_connects += 1
     end
     self
