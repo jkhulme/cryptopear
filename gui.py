@@ -159,7 +159,7 @@ class MessageThread(QThread):
         while True:
             new_messages = None
             try:
-                new_messages = self.server_handler.decrypted_recieve()
+                new_messages = "".join(self.server_handler.get_recent_messages())
             except:
                 pass
             self.message.emit(new_messages)

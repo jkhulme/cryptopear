@@ -3,7 +3,6 @@
 
 import socket as sok
 import select
-import string
 import sys
 import os
 import json
