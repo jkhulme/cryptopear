@@ -57,10 +57,10 @@ class PearClient:
   def __receive__(self):
     return base64.b64decode(self.server.recv(BUFFER_S))
 
-  def __decrypted_receive__(self):
+  def decrypted_receive(self):
     return self.__decrypt__(self.__receive__())
 
-  def __encrypted_send__(self, data):
+  def encrypted_send(self, data):
     self.__send__(self.__encrypt__(data))
 
   def ident(self):
@@ -85,13 +85,13 @@ class PearClient:
       term_action = select.select([sys.stdin], [], [], IO_TIMEOUT_S)[0]
       if term_action:
         outgoing_message = sys.stdin.readline()
-        self.__encrypted_send__(outgoing_message)
+        self.encrypted_send(outgoing_message)
 
       #Check if there there is any received data in the socket buffer
       sock_action = select.select([self.server], [], [], IO_TIMEOUT_S)[0]
       if sock_action:
         # Parse received json data
-        data = self.__decrypted_receive__()
+        data = self.decrypted_receive()
         parsed = json.loads(data)
 
         message = handle_event_json(parsed)
