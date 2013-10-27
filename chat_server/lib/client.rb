@@ -6,23 +6,58 @@ require 'json'
 
 require_relative 'namespoofer'
 
+class Pearader
+
+  def initialize(total_clients=2)
+    @mutex = Mutex.new
+    @total = total_clients
+    @connected = []
+    @num_connects = 0
+  end
+
+  def connect(client)
+    @mutex.synchronize do
+      @connected.push({name: client.realname, photo: client.photo})
+      @num_connects += 1
+    end
+    self
+  end
+
+  def broadcast_all(client)
+    ready = false
+    while !ready
+      @mutex.synchronize do
+        ready = @num_connects == @total
+      end
+      break if ready
+      puts "Waiting for everyone"
+      sleep 1
+    end
+
+    client.speak @connected.to_json
+  end
+
+end
+
 class PearClient
   @@clients = []
 
-  attr_reader :id, :socket, :name
+  attr_reader :id, :socket, :name, :realname, :photo
 
   def initialize(socket, encoded_pubkey)
     @socket = socket
     puts "Receiving their pubkey"
-    ident = JSON.parse(Base64.decode64(socket.gets))
+    ident = JSON.parse(listen)
     puts ident
+    @realname = ident['ident']['name']
+    @photo = ident['ident']['photo']
     @pubkey = ident['ident']['pubkey']
     @messages = Queue.new
     puts "Sending out pubkey"
     @messages.push (encoded_pubkey << "\n")
     @responder = Thread.new do
       while (message = @messages.pop)
-        @socket.puts message
+        @socket.puts Base64.encode64(message)
       end
     end
     puts "Ident complete"
@@ -30,7 +65,7 @@ class PearClient
 
   def pkey_encrypt(message)
     key = OpenSSL::PKey::RSA.new @pubkey
-    Base64.encode64 key.public_encrypt(message)
+    key.public_encrypt(message)
   end
 
   def speak(message)
@@ -38,7 +73,7 @@ class PearClient
   end
 
   def listen
-   @socket.gets
+   Base64.decode64 @socket.gets
   end
 
   def commit

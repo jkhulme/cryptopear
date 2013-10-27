@@ -54,7 +54,8 @@ class PearClient:
     self.server.send(base64.b64encode(data) + "\n")
 
   def __receive__(self):
-    return base64.b64decode(self.server.recv(BUFFER_S))
+    data = base64.b64decode(self.server.recv(BUFFER_S))
+    return data
 
   def decrypted_receive(self):
     return self.__decrypt__(self.__receive__())
@@ -79,6 +80,9 @@ class PearClient:
     self.server_pub = RSA.importKey(key)
     print "Stored pubkey: " + self.server_pub.exportKey()
     print "Ident complete"
+
+    print "Broadcast of all = " + self.__receive__()
+    self.__send__("Come at me bro")
     return self
 
   def loop(self):
