@@ -12,7 +12,8 @@ try:
 except:
     print "no simple cv"
 import json
-import rsa
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
 import base64
 from event_printer import handle_event_json
 
@@ -107,7 +108,7 @@ class CryptoPear(QWidget):
 
     def connect_to_server(self):
         self.server_handler = ServerHandler()
-        self.server_handler.send_message(self.get_json())
+        #self.server_handler.send_message(self.get_json())
         self.btn_accept.setDisabled(False)
         self.btn_reject.setDisabled(False)
         self.btn_connect.setDisabled(True)
@@ -188,16 +189,34 @@ class ServerHandler(object):
 
         self.messages = []
 
-        self.pub, self.pri = rsa.newkeys(2048, poolsize=4)
-        self.server.send(base64.b64encode(self.pub._save_pkcs1_pem()) + "\n")
+        new_key = RSA.generate(1024, e=65537)
+        self.pub = new_key.publickey()
+        self.pri = new_key
+
+        self.server.send(base64.b64encode(self.pub.exportKey()) + "\n")
         data = self.server.recv(BUFFER_S)
-        self.server_pub = base64.b64decode(data)
+        decoded = base64.b64decode(data)
+        print decoded
+        key = json.loads(decoded)['pubkey']
+        self.server_pub = RSA.importKey(key)
 
     def __decrypt__(self, data):
-        return rsa.decrypt(base64.b64decode(data), self.pri)
+        def pkcs1_unpad(text):
+            if len(text) > 0 and text[0] == '\x02':
+                # Find end of padding marked by nul
+                pos = text.find('\x00')
+                if pos > 0:
+                    return text[pos+1:]
+                return None
+        decrypted = self.pri.decrypt(base64.b64decode(data))
+        return pkcs1_unpad(decrypted)
+
+    def __encrypt__(self, data):
+        encrypted = PKCS1_OAEP.new(self.server_pub).encrypt(data)
+        return base64.b64encode(encrypted) + "\n"
 
     def send_message(self, outgoing_message):
-        self.server.send(outgoing_message+'\n')
+        self.server.send(self.__encrypt__(outgoing_message))
 
     def receive_messages(self):
         try:
