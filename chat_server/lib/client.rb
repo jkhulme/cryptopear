@@ -74,7 +74,8 @@ class PearClient
   end
 
   def listen
-    Base64.decode64 @socket.gets
+    data = @socket.gets
+    Base64.decode64 data unless data.nil?
   end
 
   def commit
