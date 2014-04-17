@@ -7,8 +7,7 @@ require 'json'
 require_relative 'namespoofer'
 
 class Pearader
-
-  def initialize(total_clients=2)
+  def initialize(total_clients = 2)
     @mutex = Mutex.new
     @total = total_clients
     @connected = []
@@ -17,7 +16,7 @@ class Pearader
 
   def connect(client)
     @mutex.synchronize do
-      @connected.push({id: client.id, name: client.realname, photo: client.photo})
+      @connected.push(id: client.id, name: client.realname, photo: client.photo)
       @num_connects += 1
     end
     self
@@ -34,7 +33,6 @@ class Pearader
 
     client.speak @connected.to_json
   end
-
 end
 
 class PearClient
@@ -45,14 +43,14 @@ class PearClient
   def initialize(socket, encoded_pubkey)
     @socket = socket
     @socket.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_NODELAY, 1)
-    puts "Receiving their pubkey"
+    puts 'Receiving their pubkey'
     ident = JSON.parse(listen)
     puts ident
     @realname = ident['ident']['name']
     @photo = ident['ident']['photo']
     @pubkey = ident['ident']['pubkey']
     @messages = Queue.new
-    puts "Sending out pubkey"
+    puts 'Sending out pubkey'
     @messages.push encoded_pubkey
     @responder = Thread.new do
       while (message = @messages.pop)
@@ -61,7 +59,7 @@ class PearClient
         sleep 0.01
       end
     end
-    puts "Ident complete"
+    puts 'Ident complete'
   end
 
   def pkey_encrypt(message)
@@ -87,6 +85,4 @@ class PearClient
   def self.all
     @@clients
   end
-
 end
-

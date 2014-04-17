@@ -9,12 +9,11 @@ require 'base64'
 require_relative './lib/client'
 
 class PearServer
-
   def initialize(total)
     @mutex = Mutex.new
     @server_socket = TCPServer.new 8008
     @rsa = OpenSSL::PKey::RSA.new(2048)
-    puts "Generated pubkey: " << @rsa.public_key.to_pem
+    puts 'Generated pubkey: ' << @rsa.public_key.to_pem
 
     @ready = 0
     @total = total
@@ -22,7 +21,7 @@ class PearServer
 
   def block_until_all_ready
     ready = false
-    while !ready
+    until ready
       @mutex.synchronize { ready = @ready == @total }
       break if ready
       sleep 1
@@ -37,7 +36,7 @@ class PearServer
     # Error handling
     errors = Queue.new
     Thread.new do
-      while (error = errors.pop) do
+      while (error = errors.pop)
         puts error.inspect
       end
     end
@@ -47,7 +46,7 @@ class PearServer
     # Spawn a new worker thread for each client socket opened
     loop { Thread.start(@server_socket.accept) { |client_socket|
       begin
-        puts "New client thread"
+        puts 'New client thread'
         # State is handled via the user model, first transmission is pubkey
         client = PearClient.new(client_socket, pubkey).commit
         pearader.connect(client).broadcast_all(client)
@@ -61,7 +60,7 @@ class PearServer
 
         # Relay any received data to the other clients
         loop do
-          if !(data = client.listen).nil?
+          if (data = client.listen)
             announce message_from client.name, decrypt_message(data)
           else
             announce quitjoin_event :quit, client.name
@@ -82,7 +81,7 @@ class PearServer
   end
 
   def pubkey
-    {type: 'pubkey', pubkey: @rsa.public_key.to_pem}.to_json
+    { type: 'pubkey', pubkey: @rsa.public_key.to_pem }.to_json
   end
 
   def the_time
@@ -125,8 +124,6 @@ class PearServer
       }
     }
   end
-
 end
 
 PearServer.new(ARGV.last.to_i).work
-
